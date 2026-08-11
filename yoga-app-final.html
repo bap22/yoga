@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f8f7f4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Yoga Flow">
+    <meta name="description" content="Progressive ashtanga yoga with Apple Health integration">
+    <title>Yoga Flow - Apple Health Connected</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%239db4a3' width='180' height='180'/><circle cx='90' cy='90' r='50' fill='%23f8f7f4'/><path d='M 90 50 Q 100 70 90 90 Q 80 70 90 50' fill='%239db4a3'/></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8f7f4;
+            color: #2d2d2d;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #root {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: linear-gradient(135deg, #f8f7f4 0%, #fafaf8 100%);
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .tab-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: white;
+            border-top: 1px solid #e8e5df;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .tab-button {
+            flex: 1;
+            height: 70px;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #9db4a3;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button.active {
+            color: #9db4a3;
+            background: rgba(157, 180, 163, 0.05);
+        }
+
+        .tab-icon {
+            font-size: 24px;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d2d2d;
+            line-height: 1.1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(157, 180, 163, 0.1);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #9db4a3;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7a7a7a;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .streak-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(157, 180, 163, 0.1);
+            text-align: center;
+        }
+
+        .streak-flame {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .today-focus {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(157, 180, 163, 0.1);
+        }
+
+        .today-label {
+            font-size: 12px;
+            color: #9db4a3;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .today-focus-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin-bottom: 4px;
+        }
+
+        .today-focus-desc {
+            font-size: 13px;
+            color: #7a7a7a;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .cta-button {
+            background: #9db4a3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:active {
+            transform: scale(0.98);
+            background: #8a9a90;
+        }
+
+        .health-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(157, 180, 163, 0.1);
+        }
+
+        .health-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin-bottom: 16px;
+        }
+
+        .health-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .health-metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #2d2d2d;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #9db4a3;
+        }
+
+        .sync-button {
+            background: linear-gradient(135deg, #9db4a3 0%, #8a9a90 100%);
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sync-button:active {
+            transform: scale(0.98);
+        }
+
+        /* ========== HISTORY TAB ========== */
+        .history-list {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 16px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(157, 180, 163, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-focus {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        .history-duration {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9db4a3;
+        }
+
+        /* ========== HEALTH TAB ========== */
+        .health-view {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px 20px 100px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .health-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d2d2d;
+        }
+
+        .sync-status {
+            background: white;
+            padding: 16px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(157, 180, 163, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sync-status-icon {
+            font-size: 24px;
+        }
+
+        .sync-status-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        .setup-steps {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(157, 180, 163, 0.08);
+        }
+
+        .setup-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin-bottom: 16px;
+        }
+
+        .setup-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .setup-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: #9db4a3;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .step-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        .step-desc {
+            font-size: 12px;
+            color: #7a7a7a;
+        }
+
+        /* ========== WORKOUT SCREEN ========== */
+        .yoga-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .back-button {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: #e8e5df;
+            border-radius: 2px;
+            overflow: hidden;
+            flex: 1;
+            margin: 0 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #9db4a3;
+            transition: width 0.3s ease;
+        }
+
+        .pose-counter {
+            font-size: 13px;
+            color: #7a7a7a;
+            font-weight: 500;
+        }
+
+        .pose-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 24px;
+            margin-top: 80px;
+            margin-bottom: 200px;
+            padding: 0 20px;
+        }
+
+        .pose-illustration {
+            width: 240px;
+            height: 320px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(157, 180, 163, 0.15);
+            overflow: hidden;
+            flex-shrink: 0;
+            background-image: url('https://github.com/bap22/recoverstrong/raw/main/img/yogaposes.jpg');
+            background-size: 400% 400%;
+            background-position: var(--bg-pos-x, 0%) var(--bg-pos-y, 0%);
+            background-repeat: no-repeat;
+            background-color: white;
+        }
+
+        .pose-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        .pose-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin-bottom: 6px;
+        }
+
+        .pose-sanskrit {
+            font-size: 13px;
+            color: #9db4a3;
+            font-style: italic;
+            margin-bottom: 12px;
+        }
+
+        .pose-description {
+            font-size: 15px;
+            color: #5a5a5a;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .breath-cue {
+            font-size: 13px;
+            color: #9db4a3;
+            font-weight: 500;
+            padding: 10px 14px;
+            background: rgba(157, 180, 163, 0.08);
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .timer-section {
+            position: fixed;
+            bottom: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            z-index: 20;
+        }
+
+        .timer-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 10px 40px rgba(157, 180, 163, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(#9db4a3 var(--progress), transparent var(--progress));
+            border-radius: 50%;
+        }
+
+        .timer-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 130px;
+            height: 130px;
+            background: #f8f7f4;
+            border-radius: 50%;
+            font-size: 32px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        .timer-label {
+            font-size: 11px;
+            color: #9db4a3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            width: calc(100% - 40px);
+            z-index: 20;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            max-width: 180px;
+        }
+
+        .btn-primary {
+            background: #9db4a3;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #9db4a3;
+            border: 2px solid #9db4a3;
+        }
+
+        /* COMPLETION */
+        .completion-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            padding: 40px 20px;
+        }
+
+        .completion-icon {
+            font-size: 80px;
+            animation: scaleIn 0.6s ease;
+        }
+
+        .completion-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d2d2d;
+        }
+
+        .completion-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+            background: rgba(157, 180, 163, 0.08);
+            border-radius: 14px;
+        }
+
+        .stat-item {
+            font-size: 13px;
+            color: #5a5a5a;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        // ============= POSE DATA WITH PLACEHOLDER IMAGES =============
+        const basePoses = [
+            {
+                name: "Child's Pose",
+                sanskrit: "Balasana",
+                durationBase: 60,
+                caloriesBurned: 1,
+                description: "A gentle resting pose. Kneel on the floor, bring your big toes together, knees wide. Fold forward, resting your forehead.",
+                breath: "Breathe deeply and relax",
+                bgPosX: "0%",
+                bgPosY: "85%",
+                category: "rest"
+            },
+            {
+                name: "Cat-Cow Stretch",
+                sanskrit: "Marjaryasana-Bitilasana",
+                durationBase: 60,
+                caloriesBurned: 2,
+                description: "Alternate between arching and rounding your spine. Flow with your breath.",
+                breath: "Inhale for Cow, exhale for Cat",
+                bgPosX: "50%",
+                bgPosY: "70%",
+                category: "flow"
+            },
+            {
+                name: "Downward Dog",
+                sanskrit: "Adho Mukha Svanasana",
+                durationBase: 60,
+                caloriesBurned: 3,
+                description: "Press palms down and lift hips toward the ceiling, forming an inverted V.",
+                breath: "Long, steady breaths",
+                bgPosX: "0%",
+                bgPosY: "40%",
+                category: "transition"
+            },
+            {
+                name: "Forward Fold",
+                sanskrit: "Uttanasana",
+                durationBase: 90,
+                caloriesBurned: 2,
+                description: "Stand with feet hip-width apart. Fold forward from hips, letting arms hang.",
+                breath: "Relax deeper with each exhale",
+                bgPosX: "25%",
+                bgPosY: "70%",
+                category: "flexibility"
+            },
+            {
+                name: "Mountain Pose",
+                sanskrit: "Tadasana",
+                durationBase: 45,
+                caloriesBurned: 1,
+                description: "Stand tall with feet hip-width apart. Ground through all four corners of your feet.",
+                breath: "Smooth, even breathing",
+                bgPosX: "0%",
+                bgPosY: "0%",
+                category: "alignment"
+            },
+            {
+                name: "Warrior I",
+                sanskrit: "Virabhadrasana I",
+                durationBase: 75,
+                caloriesBurned: 4,
+                description: "Step right foot forward, bend front knee. Raise arms overhead.",
+                breath: "Powerful breaths",
+                bgPosX: "50%",
+                bgPosY: "40%",
+                category: "strength"
+            },
+            {
+                name: "Warrior II",
+                sanskrit: "Virabhadrasana II",
+                durationBase: 75,
+                caloriesBurned: 4,
+                description: "Step right foot back, turning body to the side. Bend front knee deeply.",
+                breath: "Steady power breathing",
+                bgPosX: "75%",
+                bgPosY: "40%",
+                category: "strength"
+            },
+            {
+                name: "Triangle Pose",
+                sanskrit: "Trikonasana",
+                durationBase: 75,
+                caloriesBurned: 3,
+                description: "From a wide stance, rotate right foot out. Reach right arm down to shin.",
+                breath: "Deep side-body breaths",
+                bgPosX: "50%",
+                bgPosY: "55%",
+                category: "balance"
+            },
+            {
+                name: "Tree Pose",
+                sanskrit: "Vrksasana",
+                durationBase: 60,
+                caloriesBurned: 2,
+                description: "Stand on left leg. Press right foot against inner thigh. Find your balance.",
+                breath: "Calm, centering breath",
+                bgPosX: "75%",
+                bgPosY: "55%",
+                category: "balance"
+            },
+            {
+                name: "Plank Pose",
+                sanskrit: "Chaturanga Dandasana",
+                durationBase: 45,
+                caloriesBurned: 5,
+                description: "Step feet back. Shoulders over wrists. Body in one straight line.",
+                breath: "Strong, steady breathing",
+                bgPosX: "25%",
+                bgPosY: "0%",
+                category: "strength"
+            },
+            {
+                name: "Upward Dog",
+                sanskrit: "Urdhva Mukha Svanasana",
+                durationBase: 45,
+                caloriesBurned: 4,
+                description: "Lie on belly. Press palms down and straighten arms, lifting chest.",
+                breath: "Expansive breathing",
+                bgPosX: "25%",
+                bgPosY: "40%",
+                category: "strength"
+            },
+            {
+                name: "Cobra Pose",
+                sanskrit: "Bhujangasana",
+                durationBase: 45,
+                caloriesBurned: 3,
+                description: "Lie on belly. Press chest forward and up using arm strength.",
+                breath: "Gentle, opening breaths",
+                bgPosX: "50%",
+                bgPosY: "85%",
+                category: "strength"
+            },
+            {
+                name: "Seated Forward Fold",
+                sanskrit: "Paschimottanasana",
+                durationBase: 90,
+                caloriesBurned: 2,
+                description: "Sit with legs extended. Hinge at hips and fold forward gently.",
+                breath: "Release with each exhale",
+                bgPosX: "75%",
+                bgPosY: "85%",
+                category: "flexibility"
+            },
+            {
+                name: "Butterfly Pose",
+                sanskrit: "Baddha Konasana",
+                durationBase: 90,
+                caloriesBurned: 1,
+                description: "Sit with soles of feet together, knees out to sides. Fold forward.",
+                breath: "Calming, grounding breaths",
+                bgPosX: "0%",
+                bgPosY: "55%",
+                category: "flexibility"
+            },
+            {
+                name: "Supine Twist",
+                sanskrit: "Supta Parivrtta Sukhasana",
+                durationBase: 60,
+                caloriesBurned: 1,
+                description: "Lie on your back. Cross right knee over left. Press knee toward floor.",
+                breath: "Gentle release breaths",
+                bgPosX: "25%",
+                bgPosY: "55%",
+                category: "flexibility"
+            },
+            {
+                name: "Happy Baby Pose",
+                sanskrit: "Ananda Balasana",
+                durationBase: 60,
+                caloriesBurned: 1,
+                description: "Lie on back, knees to chest. Grab outsides of feet, open knees.",
+                breath: "Joyful, easy breathing",
+                bgPosX: "75%",
+                bgPosY: "0%",
+                category: "rest"
+            },
+            {
+                name: "Corpse Pose",
+                sanskrit: "Savasana",
+                durationBase: 120,
+                caloriesBurned: 0.5,
+                description: "Lie flat on your back. Let your entire body relax completely.",
+                breath: "Natural, effortless breathing",
+                bgPosX: "0%",
+                bgPosY: "70%",
+                category: "rest"
+            }
+        ];
+
+        const dailyFocuses = [
+            { name: "Full Flow", desc: "Complete balanced practice", modifier: 1 },
+            { name: "Strength & Power", desc: "Build strength and intensity", modifier: 1.15 },
+            { name: "Flexibility & Flow", desc: "Deep stretches and opening", modifier: 1.2 },
+            { name: "Balance & Focus", desc: "Challenge stability", modifier: 1 },
+            { name: "Restorative", desc: "Calming recovery practice", modifier: 1.1 },
+            { name: "Full Flow", desc: "Complete balanced practice", modifier: 1 },
+            { name: "Core & Strength", desc: "Build core power", modifier: 1.2 }
+        ];
+
+        // STATE
+        let appState = {
+            currentTab: 'dashboard',
+            currentPage: 'dashboard',
+            currentLevel: 1,
+            sessionsCompleted: 0,
+            currentStreak: 0,
+            lastSessionDate: null,
+            sessions: [],
+            totalCalories: 0,
+            totalMinutes: 0,
+            lastSyncDate: null
+        };
+
+        function initStorage() {
+            const stored = localStorage.getItem('yogaAppState');
+            if (stored) {
+                appState = { ...appState, ...JSON.parse(stored) };
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('yogaAppState', JSON.stringify(appState));
+        }
+
+        function getDayIndex() {
+            return new Date().getDay();
+        }
+
+        function getTodaysFocus() {
+            return dailyFocuses[getDayIndex()];
+        }
+
+        function generateTodaysPoseSequence() {
+            let sequence = [...basePoses];
+            sequence = sequence.sort(() => Math.random() - 0.5);
+            return [basePoses.find(p => p.name === 'Child\'s Pose'), ...sequence.slice(0, 11), basePoses.find(p => p.name === 'Corpse Pose')];
+        }
+
+        function render() {
+            const root = document.getElementById('root');
+
+            if (appState.currentPage === 'workout') {
+                renderWorkout(root);
+            } else {
+                renderTabs(root);
+            }
+        }
+
+        function renderTabs(root) {
+            let tabContent = '';
+            
+            if (appState.currentTab === 'dashboard') {
+                tabContent = renderDashboardTab();
+            } else if (appState.currentTab === 'history') {
+                tabContent = renderHistoryTab();
+            } else if (appState.currentTab === 'health') {
+                tabContent = renderHealthTab();
+            }
+
+            root.innerHTML = `
+                <div class="container">
+                    ${tabContent}
+                    <div class="tab-nav">
+                        <button class="tab-button ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
+                            <div class="tab-icon">🧘</div>
+                            <div>Flow</div>
+                        </button>
+                        <button class="tab-button ${appState.currentTab === 'history' ? 'active' : ''}" onclick="switchTab('history')">
+                            <div class="tab-icon">📋</div>
+                            <div>History</div>
+                        </button>
+                        <button class="tab-button ${appState.currentTab === 'health' ? 'active' : ''}" onclick="switchTab('health')">
+                            <div class="tab-icon">❤️</div>
+                            <div>Health</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDashboardTab() {
+            const focus = getTodaysFocus();
+
+            return `
+                <div class="dashboard">
+                    <div>
+                        <div class="welcome-title">Flow Today</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${appState.sessionsCompleted}</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.floor(appState.totalMinutes / 60)}</div>
+                            <div class="stat-label">Hours</div>
+                        </div>
+                    </div>
+
+                    <div class="streak-card">
+                        <div class="streak-flame">${appState.currentStreak > 0 ? '🔥' : '✨'}</div>
+                        <div class="stat-value" style="font-size: 24px;">${appState.currentStreak}</div>
+                        <div class="stat-label" style="margin-top: 8px;">Day Streak</div>
+                    </div>
+
+                    <div class="today-focus">
+                        <div class="today-label">Today's Focus</div>
+                        <div class="today-focus-name">${focus.name}</div>
+                        <div class="today-focus-desc">${focus.desc}</div>
+                        <button class="cta-button" onclick="startWorkout()">Start Session</button>
+                    </div>
+
+                    <div class="health-card">
+                        <div class="health-card-title">🔥 Calories Burned</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #9db4a3; margin-bottom: 8px;">${Math.round(appState.totalCalories)}</div>
+                        <div style="font-size: 12px; color: #7a7a7a;">Total from all sessions</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHistoryTab() {
+            if (appState.sessions.length === 0) {
+                return `
+                    <div class="history-list" style="justify-content: center; text-align: center; gap: 24px;">
+                        <div style="font-size: 48px; margin-top: 40px;">📝</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #2d2d2d;">No sessions yet</div>
+                        <div style="font-size: 13px; color: #7a7a7a;">Complete a session to see it here</div>
+                    </div>
+                `;
+            }
+
+            const historyItems = appState.sessions.slice().reverse().map(session => {
+                return `
+                    <div class="history-item">
+                        <div>
+                            <div style="font-size: 13px; color: #7a7a7a;">${new Date(session.date).toLocaleDateString()}</div>
+                            <div class="history-focus">${session.focus}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="history-duration">${Math.round(session.calories)} cal</div>
+                            <div style="font-size: 11px; color: #999;">L${session.level} • ${Math.floor(session.duration / 60)}m</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `<div class="history-list">${historyItems}</div>`;
+        }
+
+        function renderHealthTab() {
+            const totalSessions = appState.sessionsCompleted;
+            const avgSessionLength = totalSessions > 0 ? Math.round(appState.totalMinutes / totalSessions) : 0;
+            const synced = appState.lastSyncDate !== null;
+
+            return `
+                <div class="health-view">
+                    <div class="health-header">Apple Health</div>
+
+                    <div class="sync-status">
+                        <div class="sync-status-icon">${synced ? '✅' : '⚙️'}</div>
+                        <div>
+                            <div class="sync-status-title">${synced ? 'Connected' : 'Ready to Connect'}</div>
+                        </div>
+                    </div>
+
+                    <button class="sync-button" onclick="syncToHealth()">
+                        🔗 Sync to Apple Health
+                    </button>
+
+                    <div class="health-card">
+                        <div class="health-card-title">📈 Your Stats</div>
+                        <div class="health-metric">
+                            <div class="metric-label">Total Workouts</div>
+                            <div class="metric-value">${totalSessions}</div>
+                        </div>
+                        <div class="health-metric">
+                            <div class="metric-label">Total Time</div>
+                            <div class="metric-value">${appState.totalMinutes}m</div>
+                        </div>
+                        <div class="health-metric">
+                            <div class="metric-label">Total Calories</div>
+                            <div class="metric-value">${Math.round(appState.totalCalories)}</div>
+                        </div>
+                        <div class="health-metric">
+                            <div class="metric-label">Avg Session</div>
+                            <div class="metric-value">${avgSessionLength}m</div>
+                        </div>
+                    </div>
+
+                    <div class="setup-steps">
+                        <div class="setup-title">🍎 How It Works</div>
+                        <div class="setup-step">
+                            <div class="step-number">1</div>
+                            <div>
+                                <div class="step-label">Complete yoga sessions</div>
+                                <div class="step-desc">Data saves automatically</div>
+                            </div>
+                        </div>
+                        <div class="setup-step">
+                            <div class="step-number">2</div>
+                            <div>
+                                <div class="step-label">Tap Sync to Health</div>
+                                <div class="step-desc">Opens Health app</div>
+                            </div>
+                        </div>
+                        <div class="setup-step">
+                            <div class="step-number">3</div>
+                            <div>
+                                <div class="step-label">View your workouts</div>
+                                <div class="step-desc">Tracked in your health data</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchTab(tab) {
+            appState.currentTab = tab;
+            render();
+        }
+
+        // ============= WORKOUT FLOW =============
+        let currentPoseIndex = 0;
+        let currentPoses = [];
+        let timeRemaining = 0;
+        let isRunning = false;
+        let startTime = 0;
+        let pausedTime = 0;
+        let sessionStartTime = 0;
+
+        function startWorkout() {
+            appState.currentPage = 'workout';
+            currentPoses = generateTodaysPoseSequence();
+            currentPoseIndex = 0;
+            timeRemaining = Math.floor(currentPoses[0].durationBase * (getTodaysFocus().modifier || 1));
+            isRunning = false;
+            sessionStartTime = Date.now();
+            render();
+        }
+
+        function renderWorkout(root) {
+            if (currentPoseIndex >= currentPoses.length) {
+                completeSession(root);
+                return;
+            }
+
+            const pose = currentPoses[currentPoseIndex];
+            const duration = Math.floor(pose.durationBase * (getTodaysFocus().modifier || 1));
+            const progressPercent = ((currentPoseIndex) / currentPoses.length) * 100;
+            const circleProgress = (timeRemaining / duration) * 100;
+
+            root.innerHTML = `
+                <div class="container">
+                    <div class="yoga-header">
+                        <button class="back-button" onclick="backToDashboard()">←</button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div class="pose-counter">${currentPoseIndex + 1}/${currentPoses.length}</div>
+                    </div>
+
+                    <div class="pose-content">
+                        <div class="pose-illustration" style="--bg-pos-x: ${pose.bgPosX}; --bg-pos-y: ${pose.bgPosY};"></div>
+                        <div class="pose-info">
+                            <div class="pose-name">${pose.name}</div>
+                            <div class="pose-sanskrit">${pose.sanskrit}</div>
+                            <div class="pose-description">${pose.description}</div>
+                            <div class="breath-cue">💫 ${pose.breath}</div>
+                        </div>
+                    </div>
+
+                    <div class="timer-section">
+                        <div class="timer-circle" style="--progress: ${circleProgress}%">
+                            <div class="timer-content">
+                                <div>${timeRemaining}s</div>
+                                <div class="timer-label">remaining</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-secondary" onclick="toggleTimer()">
+                            ${isRunning ? 'Pause' : 'Start'}
+                        </button>
+                        <button class="btn-primary" onclick="nextPose()">
+                            ${currentPoseIndex === currentPoses.length - 1 ? 'Finish' : 'Next'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                isRunning = false;
+                pausedTime = Date.now();
+            } else {
+                isRunning = true;
+                startTime = Date.now() - pausedTime;
+            }
+            updateTimer();
+        }
+
+        function nextPose() {
+            if (currentPoseIndex < currentPoses.length - 1) {
+                currentPoseIndex++;
+                const pose = currentPoses[currentPoseIndex];
+                timeRemaining = Math.floor(pose.durationBase * (getTodaysFocus().modifier || 1));
+                isRunning = false;
+                pausedTime = 0;
+                render();
+            } else {
+                completeSession();
+            }
+        }
+
+        function updateTimer() {
+            if (!isRunning) return;
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const pose = currentPoses[currentPoseIndex];
+            const duration = Math.floor(pose.durationBase * (getTodaysFocus().modifier || 1));
+            timeRemaining = Math.max(0, duration - elapsed);
+
+            if (timeRemaining === 0) {
+                playNotification();
+                nextPose();
+                return;
+            }
+
+            render();
+            setTimeout(updateTimer, 100);
+        }
+
+        function completeSession(root) {
+            const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const sessionMinutes = Math.round(sessionDuration / 60);
+            const today = new Date().toDateString();
+
+            let sessionCalories = 0;
+            currentPoses.forEach(pose => {
+                const baseCals = pose.caloriesBurned || 1;
+                const modified = baseCals * (getTodaysFocus().modifier || 1);
+                sessionCalories += modified;
+            });
+
+            appState.sessionsCompleted++;
+            appState.totalMinutes += sessionMinutes;
+            appState.totalCalories += sessionCalories;
+
+            if (appState.lastSessionDate !== today) {
+                appState.currentStreak++;
+                appState.lastSessionDate = today;
+            }
+
+            appState.sessions.push({
+                date: today,
+                duration: sessionDuration,
+                focus: getTodaysFocus().name,
+                level: appState.currentLevel,
+                calories: sessionCalories
+            });
+
+            if (appState.sessionsCompleted === 20 && appState.currentLevel === 1) {
+                appState.currentLevel = 2;
+            }
+
+            saveState();
+
+            const container = document.getElementById('root') || root;
+            container.innerHTML = `
+                <div class="container">
+                    <div class="completion-screen">
+                        <div class="completion-icon">🙏</div>
+                        <div class="completion-title">Beautiful Work</div>
+                        <div class="completion-stats">
+                            <div class="stat-item"><span style="color: #9db4a3; font-weight: 600;">Duration:</span> ${Math.floor(sessionDuration / 60)}m ${sessionDuration % 60}s</div>
+                            <div class="stat-item"><span style="color: #9db4a3; font-weight: 600;">Calories:</span> ${Math.round(sessionCalories)}</div>
+                            <div class="stat-item"><span style="color: #9db4a3; font-weight: 600;">Poses:</span> ${currentPoses.length}</div>
+                        </div>
+                        <button class="cta-button" onclick="backToDashboard()">Return Home</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function backToDashboard() {
+            appState.currentPage = 'dashboard';
+            currentPoseIndex = 0;
+            isRunning = false;
+            render();
+        }
+
+        function playNotification() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 528;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {}
+        }
+
+        function syncToHealth() {
+            if (appState.sessions.length === 0) {
+                alert('Complete a yoga session first to sync!');
+                return;
+            }
+
+            appState.lastSyncDate = new Date().toISOString();
+            saveState();
+
+            window.location.href = 'Health://';
+
+            setTimeout(() => {
+                alert('Health app opened! Your yoga workouts are ready to view.');
+                render();
+            }, 1000);
+        }
+
+        // PWA Setup
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open('yoga-final-v1').then((cache) => {
+                            return cache.addAll(['/']);
+                        })
+                    );
+                });
+
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((response) => {
+                            return response || fetch(event.request);
+                        }).catch(() => caches.match('/'))
+                    );
+                });
+            `;
+
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+
+        const manifest = {
+            name: "Yoga Flow",
+            short_name: "Yoga",
+            description: "Progressive ashtanga yoga with Apple Health integration",
+            start_url: "/",
+            display: "fullscreen",
+            background_color: "#f8f7f4",
+            theme_color: "#9db4a3",
+            orientation: "portrait"
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = URL.createObjectURL(manifestBlob);
+        document.head.appendChild(link);
+
+        // Initialize
+        initStorage();
+        render();
+    </script>
+</body>
+</html>
