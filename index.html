@@ -549,6 +549,23 @@
         let startTime = 0;
         let pausedTime = 0;
         let sessionStartTime = 0;
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => { wakeLock = null; });
+                } catch (e) {}
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
 
         function startWorkout() {
             appState.currentPage = 'workout';
@@ -598,7 +615,7 @@
 
                     <div class="controls">
                         <button class="btn-secondary" onclick="toggleTimer()">${isRunning ? 'Pause' : 'Start'}</button>
-                        <button class="btn-primary" onclick="nextPose()">${currentPoseIndex === poses.length - 1 ? 'Finish' : 'Next'}</button>
+                        <button class="btn-primary" onclick="nextPose(false)">${currentPoseIndex === poses.length - 1 ? 'Finish' : 'Next'}</button>
                     </div>
                 </div>
             `;
@@ -608,21 +625,32 @@
             if (isRunning) {
                 isRunning = false;
                 pausedTime = Date.now();
+                releaseWakeLock();
             } else {
                 isRunning = true;
                 startTime = Date.now() - pausedTime;
+                requestWakeLock();
             }
             updateTimer();
         }
 
-        function nextPose() {
+        function nextPose(autoAdvance) {
             if (currentPoseIndex < poses.length - 1) {
                 currentPoseIndex++;
                 timeRemaining = poses[currentPoseIndex].duration;
-                isRunning = false;
-                pausedTime = 0;
-                render();
+                if (autoAdvance) {
+                    isRunning = true;
+                    startTime = Date.now();
+                    pausedTime = 0;
+                    render();
+                    updateTimer();
+                } else {
+                    isRunning = false;
+                    pausedTime = 0;
+                    render();
+                }
             } else {
+                releaseWakeLock();
                 completeSession();
             }
         }
@@ -632,7 +660,7 @@
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             timeRemaining = Math.max(0, poses[currentPoseIndex].duration - elapsed);
             if (timeRemaining === 0) {
-                nextPose();
+                nextPose(true);
             } else {
                 render();
                 setTimeout(updateTimer, 100);
@@ -669,6 +697,7 @@
             appState.currentPage = 'dashboard';
             currentPoseIndex = 0;
             isRunning = false;
+            releaseWakeLock();
             render();
         }
 
